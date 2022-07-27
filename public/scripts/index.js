@@ -27,8 +27,24 @@
 // This file is borrowed from lynckia/licode with some modifications.
 
 'use strict';
+
 var conference;
 var publicationGlobal;
+var  vdeviceId ;
+navigator.mediaDevices.enumerateDevices()
+    .then(function(devices) {
+        devices.forEach(function(device) {
+            console.log(device.kind + ": " + device.label +
+                " id = " + device.deviceId);
+            if(device.kind.indexOf("videoinput")>-1){
+                vdeviceId=device.deviceId;
+            }
+        });
+    })
+    .catch(function(err) {
+        console.log(err.name + ": " + err.message);
+    });
+
 // Change to your sample server's URL if it's not deployed on the same machine
 // as this page.
 const serverUrlBase = undefined;
@@ -39,6 +55,7 @@ const runSocketIOSample = function() {
     let myId;
     let subscriptionForMixedStream;
     let myRoom;
+
 
     function getParameterByName(name) {
         name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
@@ -134,7 +151,7 @@ const runSocketIOSample = function() {
     });
 
 
-    window.onload = function() {
+    window.onload= function() {
         var simulcast = getParameterByName('simulcast') || false;
         var shareScreen = getParameterByName('screen') || false;
         myRoom = getParameterByName('room');
@@ -161,7 +178,15 @@ const runSocketIOSample = function() {
                         videoConstraints = new Owt.Base.VideoTrackConstraints(Owt.Base.VideoSourceInfo.SCREENCAST);
                     }
 
+                    console.log(vdeviceId);
                     let mediaStream;
+                    videoConstraints.frameRate = 15
+                    videoConstraints.bitrate = 'x0.2'
+                    videoConstraints.keyFrameInterval = 100
+                    videoConstraints.deviceId = vdeviceId;
+                    videoConstraints.resolution = { width: 480, height: 360 }
+                    console.log(vdeviceId);
+
                     Owt.Base.MediaStreamFactory.createMediaStream(new Owt.Base.StreamConstraints(
                         audioConstraints, videoConstraints)).then(stream => {
                         let publishOption;
