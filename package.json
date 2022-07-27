@@ -12,6 +12,9 @@
     "gateway",
     "mcu"
   ],
+  "scripts": {
+    "start": "node ."
+  },
   "dependencies": {
     "body-parser": "1.19.0",
     "errorhandler": "",

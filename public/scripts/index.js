@@ -31,6 +31,9 @@
 var conference;
 var publicationGlobal;
 var  vdeviceId ;
+function buttonClick() {
+     alert("123456")
+}
 navigator.mediaDevices.enumerateDevices()
     .then(function(devices) {
         devices.forEach(function(device) {
