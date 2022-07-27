@@ -1,0 +1,26 @@
+{
+  "name": "owt-sample-conference",
+  "title": "Open WebRTC Toolkit Conference Sample",
+  "description": "Open WebRTC Toolkit JavaScript Conference Sample",
+  "version": "5.0.0",
+  "homepage": "http://webrtc.intel.com",
+  "author": "Open WebRTC Toolkit authors",
+  "keywords": [
+    "webrtc",
+    "library",
+    "sdk",
+    "gateway",
+    "mcu"
+  ],
+  "dependencies": {
+    "body-parser": "1.19.0",
+    "errorhandler": "",
+    "express": "",
+    "morgan": "",
+    "spdy": ""
+  },
+  "main": "samplertcservice.js",
+  "engines": {
+    "node": ">=0.10"
+  }
+}
