@@ -30,46 +30,43 @@
 
 var conference;
 var publicationGlobal;
-var  vdeviceId ;
-function buttonClick() {
-     alert("123456")
-}
+var vdeviceId;
+
 navigator.mediaDevices.enumerateDevices()
-    .then(function(devices) {
-        devices.forEach(function(device) {
+    .then(function (devices) {
+        devices.forEach(function (device) {
             console.log(device.kind + ": " + device.label +
                 " id = " + device.deviceId);
-            if(device.kind.indexOf("videoinput")>-1){
-                vdeviceId=device.deviceId;
+            if (device.kind.indexOf("videoinput") > -1) {
+                vdeviceId = device.deviceId;
             }
         });
     })
-    .catch(function(err) {
+    .catch(function (err) {
         console.log(err.name + ": " + err.message);
     });
 
 // Change to your sample server's URL if it's not deployed on the same machine
 // as this page.
 const serverUrlBase = undefined;
-const runSocketIOSample = function() {
+let localStream;
 
-    let localStream;
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
+    var regex = new RegExp('[\\?&]' + name + '=([^&#]*)'),
+        results = regex.exec(location.search);
+    return results === null ? '' : decodeURIComponent(results[1].replace(
+        /\+/g, ' '));
+}
+
+const runSocketIOSample = function () {
     let showedRemoteStreams = [];
     let myId;
     let subscriptionForMixedStream;
     let myRoom;
 
-
-    function getParameterByName(name) {
-        name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
-        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)'),
-            results = regex.exec(location.search);
-        return results === null ? '' : decodeURIComponent(results[1].replace(
-            /\+/g, ' '));
-    }
-
-    var subscribeForward = getParameterByName('forward') === 'true'?true:false;
-    var isSelf = getParameterByName('self') === 'false'?false:true;
+    var subscribeForward = getParameterByName('forward') === 'true' ? true : false;
+    var isSelf = getParameterByName('self') === 'false' ? false : true;
     conference = new Owt.Conference.ConferenceClient();
     function createResolutionButtons(stream, subscribeResolutionCallback) {
         let $p = $(`#${stream.id}resolutions`);
@@ -104,9 +101,9 @@ const runSocketIOSample = function() {
         };
         return $p;
     }
-    function subscribeAndRenderVideo(stream){
-        let subscirptionLocal=null;
-        function subscribeDifferentResolution(stream, resolution){
+    function subscribeAndRenderVideo(stream) {
+        let subscirptionLocal = null;
+        function subscribeDifferentResolution(stream, resolution) {
             subscirptionLocal && subscirptionLocal.stop();
             subscirptionLocal = null;
             const videoOptions = {};
@@ -116,19 +113,20 @@ const runSocketIOSample = function() {
                 video: videoOptions
             }).then((
                 subscription) => {
-                    subscirptionLocal = subscription;
+                subscirptionLocal = subscription;
                 $(`#${stream.id}`).get(0).srcObject = subscription.stream;
             });
         }
         let $p = createResolutionButtons(stream, subscribeDifferentResolution);
         conference.subscribe(stream)
-        .then((subscription)=>{
-            subscirptionLocal = subscription;
-            let $video = $(`<video controls autoplay id=${stream.id} style="display:block" >this browser does not supported video tag</video>`);
-           $video.get(0).srcObject = subscription.stream;
-           $p.append($video);
-        }, (err)=>{ console.log('subscribe failed', err);
-        });
+            .then((subscription) => {
+                subscirptionLocal = subscription;
+                let $video = $(`<video controls autoplay id=${stream.id} style="display:block" >this browser does not supported video tag</video>`);
+                $video.get(0).srcObject = subscription.stream;
+                $p.append($video);
+            }, (err) => {
+                console.log('subscribe failed', err);
+            });
         stream.addEventListener('ended', () => {
             removeUi(stream.id);
             $(`#${stream.id}resolutions`).remove();
@@ -139,13 +137,13 @@ const runSocketIOSample = function() {
             createResolutionButtons(stream, subscribeDifferentResolution);
         });
     }
-    function removeUi(id){
+    function removeUi(id) {
         $(`#${id}`).remove();
     }
 
     conference.addEventListener('streamadded', (event) => {
         console.log('A new stream is added ', event.stream.id);
-        isSelf = isSelf?isSelf:event.stream.id != publicationGlobal.id;
+        isSelf = isSelf ? isSelf : event.stream.id != publicationGlobal.id;
         subscribeForward && isSelf && subscribeAndRenderVideo(event.stream);
         mixStream(myRoom, event.stream.id, 'common', serverUrlBase);
         event.stream.addEventListener('ended', () => {
@@ -154,116 +152,157 @@ const runSocketIOSample = function() {
     });
 
 
-    window.onload= function() {
-        var simulcast = getParameterByName('simulcast') || false;
-        var shareScreen = getParameterByName('screen') || false;
-        myRoom = getParameterByName('room');
-        var isHttps = (location.protocol === 'https:');
-        var mediaUrl = getParameterByName('url');
-        var isPublish = getParameterByName('publish');
-        createToken(myRoom, 'user', 'presenter', function(response) {
-            var token = response;
-            conference.join(token).then(resp => {
-                myId = resp.self.id;
-                myRoom = resp.id;
-                if(mediaUrl){
-                     startStreamingIn(myRoom, mediaUrl, serverUrlBase);
-                }
-                if (isPublish !== 'false') {
-                    // audioConstraintsForMic
-                    let audioConstraints = new Owt.Base.AudioTrackConstraints(Owt.Base.AudioSourceInfo.MIC);
-                    // videoConstraintsForCamera
-                    let videoConstraints = new Owt.Base.VideoTrackConstraints(Owt.Base.VideoSourceInfo.CAMERA);
-                    if (shareScreen) {
-                        // audioConstraintsForScreen
-                        audioConstraints = new Owt.Base.AudioTrackConstraints(Owt.Base.AudioSourceInfo.SCREENCAST);
-                        // videoConstraintsForScreen
-                        videoConstraints = new Owt.Base.VideoTrackConstraints(Owt.Base.VideoSourceInfo.SCREENCAST);
-                    }
-
-                    console.log(vdeviceId);
-                    let mediaStream;
-                    videoConstraints.frameRate = 15
-                    videoConstraints.bitrate = 'x0.2'
-                    videoConstraints.keyFrameInterval = 100
-                    videoConstraints.deviceId = vdeviceId;
-                    videoConstraints.resolution = { width: 480, height: 360 }
-                    console.log(vdeviceId);
-
-                    Owt.Base.MediaStreamFactory.createMediaStream(new Owt.Base.StreamConstraints(
-                        audioConstraints, videoConstraints)).then(stream => {
-                        let publishOption;
-                        if (simulcast) {
-                            publishOption = {video:[
-                                {rid: 'q', active: true/*, scaleResolutionDownBy: 4.0*/},
-                                {rid: 'h', active: true/*, scaleResolutionDownBy: 2.0*/},
-                                {rid: 'f', active: true}
-                            ]};
-                        }
-                        mediaStream = stream;
-                        localStream = new Owt.Base.LocalStream(
-                            mediaStream, new Owt.Base.StreamSourceInfo(
-                                'mic', 'camera'));
-                        $('.local video').get(0).srcObject = stream;
-                        // Publish with RTCRtpTransceivers.
-                        // const transceivers = [];
-                        // for (const track of mediaStream.getTracks()) {
-                        //   transceivers.push(
-                        //       conference.peerConnection.addTransceiver(track, {
-                        //         direction: 'sendonly',
-                        //         streams: [stream],
-                        //       }));
-                        // }
-                        // publication =
-                        //     await conference.publish(localStream, transceivers);
-
-                        // Publish with options.
-                        conference.publish(localStream, publishOption).then(publication => {
-                            publicationGlobal = publication;
-                            mixStream(myRoom, publication.id, 'common', serverUrlBase)
-                            publication.addEventListener('error', (err) => {
-                                console.log('Publication error: ' + err.error.message);
-                            });
-                        });
-                    }, err => {
-                        console.error('Failed to create MediaStream, ' +
-                            err);
-                    });
-                }
-                var streams = resp.remoteStreams;
-                for (const stream of streams) {
-                    if(!subscribeForward){
-                      if (stream.source.audio === 'mixed' || stream.source.video ===
-                        'mixed') {
-                        subscribeAndRenderVideo(stream);
-                      }
-                    } else if (stream.source.audio !== 'mixed') {
-                        subscribeAndRenderVideo(stream);
-                    }
-                }
-                console.log('Streams in conference:', streams.length);
-                var participants = resp.participants;
-                console.log('Participants in conference: ' + participants.length);
-            }, function(err) {
-                console.error('server connection failed:', err);
-                if (err.message.indexOf('connect_error:') >= 0) {
-                    const signalingHost = err.message.replace('connect_error:', '');
-                    const signalingUi = 'signaling';
-                    removeUi(signalingUi);
-                    let $p = $(`<div id=${signalingUi}> </div>`);
-                    const anchor = $('<a/>', {
-                        text: 'Click this for testing certificate and refresh',
-                        target: '_blank',
-                        href: `${signalingHost}/socket.io/`
-                    });
-                    anchor.appendTo($p);
-                    $p.appendTo($('body'));
-                }
-            });
-        }, serverUrlBase);
-    };
+    // window.onload= function() {
+    //     var simulcast = getParameterByName('simulcast') || false;
+    //     var shareScreen = getParameterByName('screen') || false;
+    //     myRoom = getParameterByName('room');
+    //     var isHttps = (location.protocol === 'https:');
+    //     var mediaUrl = getParameterByName('url');
+    //     var isPublish = getParameterByName('publish');
+    //     createToken(myRoom, 'user', 'presenter', function(response) {
+    //         var token = response;
+    //         conference.join(token).then(resp => {
+    //             myId = resp.self.id;
+    //             myRoom = resp.id;
+    //             if(mediaUrl){
+    //                  startStreamingIn(myRoom, mediaUrl, serverUrlBase);
+    //             }
+    //             if (isPublish !== 'false') {
+    //                 // audioConstraintsForMic
+    //                 let audioConstraints = new Owt.Base.AudioTrackConstraints(Owt.Base.AudioSourceInfo.MIC);
+    //                 // videoConstraintsForCamera
+    //                 let videoConstraints = new Owt.Base.VideoTrackConstraints(Owt.Base.VideoSourceInfo.CAMERA);
+    //                 if (shareScreen) {
+    //                     // audioConstraintsForScreen
+    //                     audioConstraints = new Owt.Base.AudioTrackConstraints(Owt.Base.AudioSourceInfo.SCREENCAST);
+    //                     // videoConstraintsForScreen
+    //                     videoConstraints = new Owt.Base.VideoTrackConstraints(Owt.Base.VideoSourceInfo.SCREENCAST);
+    //                 }
+    //
+    //                 console.log(vdeviceId);
+    //                 let mediaStream;
+    //                 videoConstraints.frameRate = 15
+    //                 videoConstraints.bitrate = 'x0.2'
+    //                 videoConstraints.keyFrameInterval = 100
+    //                 videoConstraints.deviceId = vdeviceId;
+    //                 videoConstraints.resolution = { width: 480, height: 360 }
+    //                 console.log(vdeviceId);
+    //
+    //                 Owt.Base.MediaStreamFactory.createMediaStream(new Owt.Base.StreamConstraints(
+    //                     audioConstraints, videoConstraints)).then(stream => {
+    //                     let publishOption;
+    //                     if (simulcast) {
+    //                         publishOption = {video:[
+    //                             {rid: 'q', active: true/*, scaleResolutionDownBy: 4.0*/},
+    //                             {rid: 'h', active: true/*, scaleResolutionDownBy: 2.0*/},
+    //                             {rid: 'f', active: true}
+    //                         ]};
+    //                     }
+    //                     mediaStream = stream;
+    //                     localStream = new Owt.Base.LocalStream(
+    //                         mediaStream, new Owt.Base.StreamSourceInfo(
+    //                             'mic', 'camera'));
+    //                     $('.local video').get(0).srcObject = stream;
+    //                     // Publish with RTCRtpTransceivers.
+    //                     // const transceivers = [];
+    //                     // for (const track of mediaStream.getTracks()) {
+    //                     //   transceivers.push(
+    //                     //       conference.peerConnection.addTransceiver(track, {
+    //                     //         direction: 'sendonly',
+    //                     //         streams: [stream],
+    //                     //       }));
+    //                     // }
+    //                     // publication =
+    //                     //     await conference.publish(localStream, transceivers);
+    //
+    //                     // Publish with options.
+    //                     conference.publish(localStream, publishOption).then(publication => {
+    //                         publicationGlobal = publication;
+    //                         mixStream(myRoom, publication.id, 'common', serverUrlBase)
+    //                         publication.addEventListener('error', (err) => {
+    //                             console.log('Publication error: ' + err.error.message);
+    //                         });
+    //                     });
+    //                 }, err => {
+    //                     console.error('Failed to create MediaStream, ' +
+    //                         err);
+    //                 });
+    //             }
+    //             var streams = resp.remoteStreams;
+    //             for (const stream of streams) {
+    //                 if(!subscribeForward){
+    //                   if (stream.source.audio === 'mixed' || stream.source.video ===
+    //                     'mixed') {
+    //                     subscribeAndRenderVideo(stream);
+    //                   }
+    //                 } else if (stream.source.audio !== 'mixed') {
+    //                     subscribeAndRenderVideo(stream);
+    //                 }
+    //             }
+    //             console.log('Streams in conference:', streams.length);
+    //             var participants = resp.participants;
+    //             console.log('Participants in conference: ' + participants.length);
+    //         }, function(err) {
+    //             console.error('server connection failed:', err);
+    //             if (err.message.indexOf('connect_error:') >= 0) {
+    //                 const signalingHost = err.message.replace('connect_error:', '');
+    //                 const signalingUi = 'signaling';
+    //                 removeUi(signalingUi);
+    //                 let $p = $(`<div id=${signalingUi}> </div>`);
+    //                 const anchor = $('<a/>', {
+    //                     text: 'Click this for testing certificate and refresh',
+    //                     target: '_blank',
+    //                     href: `${signalingHost}/socket.io/`
+    //                 });
+    //                 anchor.appendTo($p);
+    //                 $p.appendTo($('body'));
+    //             }
+    //         });
+    //     }, serverUrlBase);
+    // };
 };
-window.onbeforeunload = function(event){
+
+function buttonClick() {
+    var simulcast = getParameterByName('simulcast') || false;
+    var shareScreen = getParameterByName('screen') || false;
+    let audioConstraints = new Owt.Base.AudioTrackConstraints(Owt.Base.AudioSourceInfo.MIC);
+    // videoConstraintsForCamera
+    let videoConstraints = new Owt.Base.VideoTrackConstraints(Owt.Base.VideoSourceInfo.CAMERA);
+    //if (shareScreen) {
+        // audioConstraintsForScreen
+        //audioConstraints = new Owt.Base.AudioTrackConstraints(Owt.Base.AudioSourceInfo.SCREENCAST);
+        // videoConstraintsForScreen
+        //videoConstraints = new Owt.Base.VideoTrackConstraints(Owt.Base.VideoSourceInfo.SCREENCAST);
+    //}
+    console.log(vdeviceId);
+    let mediaStream;
+    videoConstraints.frameRate = 15
+    videoConstraints.bitrate = 'x0.2'
+    videoConstraints.keyFrameInterval = 100
+    videoConstraints.deviceId = vdeviceId;
+    videoConstraints.resolution = { width: 480, height: 360 }
+    console.log(vdeviceId);
+    Owt.Base.MediaStreamFactory.createMediaStream(new Owt.Base.StreamConstraints(
+        audioConstraints, videoConstraints)).then(stream => {
+            let publishOption;
+            if (simulcast) {
+                publishOption = {
+                    video: [
+                        { rid: 'q', active: true/*, scaleResolutionDownBy: 4.0*/ },
+                        { rid: 'h', active: true/*, scaleResolutionDownBy: 2.0*/ },
+                        { rid: 'f', active: true }
+                    ]
+                };
+            }
+            mediaStream = stream;
+            localStream = new Owt.Base.LocalStream(
+                mediaStream, new Owt.Base.StreamSourceInfo(
+                    'mic', 'camera'));
+            $('.local video').get(0).srcObject = stream;
+        });
+}
+
+window.onbeforeunload = function (event) {
     conference.leave()
     publicationGlobal.stop();
 }
