@@ -267,71 +267,18 @@ function getUserMedia(constrains,success,error){
     }
 }
 
-function onGetMediaSuccess(MediaStream){
-    /// 查询摄像头
-    navigator.mediaDevices.enumerateDevices().then(function (devices) {
-        devices.forEach(function (device) {
-            if (device.kind === "videoinput") {
-                videoDeviceIds[videoDeviceIds.length] = device.deviceId;
-            } else if (device.kind === "audioinput") {
-                audioDevIds[audioDevIds.length] = device.deviceId;
-            }
-        });
-        /// 如果有摄像头头
-        if (videoDeviceIds.length > 0) {
-            var simulcast = getParameterByName('simulcast') || false;
-            var shareScreen = getParameterByName('screen') || false;
-            let audioConstraints = new Owt.Base.AudioTrackConstraints(Owt.Base.AudioSourceInfo.MIC);
-            // videoConstraintsForCamera
-            let videoConstraints = new Owt.Base.VideoTrackConstraints(Owt.Base.VideoSourceInfo.CAMERA);
-            //if (shareScreen) {
-            // audioConstraintsForScreen
-            //audioConstraints = new Owt.Base.AudioTrackConstraints(Owt.Base.AudioSourceInfo.SCREENCAST);
-            // videoConstraintsForScreen
-            //videoConstraints = new Owt.Base.VideoTrackConstraints(Owt.Base.VideoSourceInfo.SCREENCAST);
-            //}
-            let mediaStream;
-            videoConstraints.frameRate = 15
-            videoConstraints.bitrate = 'x0.2'
-            videoConstraints.keyFrameInterval = 100
-            videoConstraints.deviceId = videoDeviceIds[0];
-            console.log("videoConstraints.deviceId", videoConstraints.deviceId);
-            videoConstraints.resolution = { width: 480, height: 360 }
-            Owt.Base.MediaStreamFactory.createMediaStream(new Owt.Base.StreamConstraints(
-                audioConstraints, videoConstraints)).then(stream => {
-                    let publishOption;
-                    if (simulcast) {
-                        publishOption = {
-                            video: [
-                                { rid: 'q', active: true/*, scaleResolutionDownBy: 4.0*/ },
-                                { rid: 'h', active: true/*, scaleResolutionDownBy: 2.0*/ },
-                                { rid: 'f', active: true }
-                            ]
-                        };
-                    }
-                    mediaStream = stream;
-                    localStream = new Owt.Base.LocalStream(
-                        mediaStream, new Owt.Base.StreamSourceInfo(
-                            'mic', 'camera'));
-                    $('.local video').get(0).srcObject = stream;
-                }, function onError(error) {
-                    console.log("错误：", error);
-                });
-        } else {
-            alert("本设备没有摄像头")
-
-        }
-    }).catch(function (err) {
-        console.log(err.name + ": " + err.message);
-    });
+function onGetMediaSuccess(mediaStream){
+    $('.local video').get(0).srcObject = mediaStream;
 }
 
 function onGetMediaError(error){
     console.log("错误：", error);
 }
+
+/// 相应按下按钮
 function buttonClick() {
     /// 获取权限
-    getUserMedia({ video: true, audio: true },onGetMediaSuccess,onGetMediaError);
+    getUserMedia({ video: true},onGetMediaSuccess,onGetMediaError);
 }
 
 window.onbeforeunload = function (event) {
