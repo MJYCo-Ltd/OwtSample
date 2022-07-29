@@ -32,6 +32,8 @@ var conference;
 var publicationGlobal;
 var videoDeviceIds = [];
 var audioDevIds = [];
+var videoOpen = false;
+var audioOpen = false;
 
 // Change to your sample server's URL if it's not deployed on the same machine
 // as this page.
@@ -251,34 +253,75 @@ const runSocketIOSample = function () {
 };
 
 /// 适配各种内核的API
-function getUserMedia(constrains,success,error){
-    if(navigator.mediaDevices.getUserMedia){
+function getUserMedia(constrains, success, error) {
+    if (navigator.mediaDevices.getUserMedia) {
         //最新标准API
         navigator.mediaDevices.getUserMedia(constrains).then(success).catch(error);
-    } else if (navigator.webkitGetUserMedia){
+    } else if (navigator.webkitGetUserMedia) {
         //webkit内核浏览器
         navigator.webkitGetUserMedia(constrains).then(success).catch(error);
-    } else if (navigator.mozGetUserMedia){
+    } else if (navigator.mozGetUserMedia) {
         //Firefox浏览器
         navagator.mozGetUserMedia(constrains).then(success).catch(error);
-    } else if (navigator.getUserMedia){
+    } else if (navigator.getUserMedia) {
         //旧版API
         navigator.getUserMedia(constrains).then(success).catch(error);
     }
 }
 
-function onGetMediaSuccess(mediaStream){
+function onGetMediaSuccess(mediaStream) {
     $('.local video').get(0).srcObject = mediaStream;
 }
 
-function onGetMediaError(error){
+function onGetMediaError(error) {
+    $('.local video').get(0).srcObject = null;
     console.log("错误：", error);
 }
 
 /// 相应按下按钮
-function buttonClick() {
-    /// 获取权限
-    getUserMedia({ video: true},onGetMediaSuccess,onGetMediaError);
+function mediaChanged() {
+    if (false === audioOpen && false === videoOpen) {
+        $('.local video').get(0).srcObject = null;
+    }
+    else {
+        getUserMedia({ video: videoOpen, audio: audioOpen }, onGetMediaSuccess, onGetMediaError);
+    }
+}
+
+function openVideo() {
+    videoOpen = true;
+    mediaChanged();
+}
+
+function closeVideo() {
+    var steam = $('.local video').get(0).srcObject;
+    if (steam) {
+        steam.getTracks().forEach(function (track) {
+            console.log(track);
+            if (track.kind === "video") {
+                track.stop();
+            }
+        })
+    }
+    videoOpen = false;
+}
+
+function openAudio() {
+    audioOpen = true;
+    mediaChanged();
+}
+
+function closeAudio() {
+    var steam = $('.local video').get(0).srcObject;
+    if (steam) {
+        steam.getTracks().forEach(function (track) {
+            console.log(track);
+            if (track.kind === "audio") {
+                track.stop();
+            }
+        })
+    }
+    audioOpen = false;
 }
 
 window.onbeforeunload = function (event) {
