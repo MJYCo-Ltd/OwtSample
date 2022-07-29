@@ -30,10 +30,6 @@
 
 var conference;
 var publicationGlobal;
-var videoDeviceIds = [];
-var audioDevIds = [];
-var videoOpen = false;
-var audioOpen = false;
 
 // Change to your sample server's URL if it's not deployed on the same machine
 // as this page.
@@ -46,6 +42,11 @@ function getParameterByName(name) {
         results = regex.exec(location.search);
     return results === null ? '' : decodeURIComponent(results[1].replace(
         /\+/g, ' '));
+}
+
+/// 移除指定ID的值
+function removeUi(id) {
+    $(`#${id}`).remove();
 }
 
 const runSocketIOSample = function () {
@@ -126,9 +127,6 @@ const runSocketIOSample = function () {
             $p.children('button').remove();
             createResolutionButtons(stream, subscribeDifferentResolution);
         });
-    }
-    function removeUi(id) {
-        $(`#${id}`).remove();
     }
 
     conference.addEventListener('streamadded', (event) => {
@@ -252,85 +250,7 @@ const runSocketIOSample = function () {
     // };
 };
 
-/// 适配各种内核的API
-function getUserMedia(constrains, success, error) {
-    if (navigator.mediaDevices.getUserMedia) {
-        //最新标准API
-        navigator.mediaDevices.getUserMedia(constrains).then(success).catch(error);
-    } else if (navigator.webkitGetUserMedia) {
-        //webkit内核浏览器
-        navigator.webkitGetUserMedia(constrains).then(success).catch(error);
-    } else if (navigator.mozGetUserMedia) {
-        //Firefox浏览器
-        navagator.mozGetUserMedia(constrains).then(success).catch(error);
-    } else if (navigator.getUserMedia) {
-        //旧版API
-        navigator.getUserMedia(constrains).then(success).catch(error);
-    }
-}
-
-function onGetMediaSuccess(mediaStream) {
-    var steam = $('.local video').get(0).srcObject;
-    if (steam) {
-        steam.getTracks().forEach(function (track) {
-                track.stop();
-        })
-    }
-
-    $('.local video').get(0).srcObject = mediaStream;
-}
-
-function onGetMediaError(error) {
-    console.log("错误：", error);
-}
-
-/// 相应按下按钮
-function mediaChanged() {
-    if (false === audioOpen && false === videoOpen) {
-        $('.local video').get(0).srcObject = null;
-    }
-    else {
-        getUserMedia({ video: videoOpen, audio: audioOpen }, onGetMediaSuccess, onGetMediaError);
-    }
-}
-
-function openVideo() {
-    videoOpen = true;
-    mediaChanged();
-}
-
-function closeVideo() {
-    var steam = $('.local video').get(0).srcObject;
-    if (steam) {
-        steam.getTracks().forEach(function (track) {
-            if (track.kind === "video") {
-                track.stop();
-            }
-        })
-    }
-    videoOpen = false;
-}
-
-function openAudio() {
-    audioOpen = true;
-    mediaChanged();
-}
-
-function closeAudio() {
-    var steam = $('.local video').get(0).srcObject;
-    console.log(steam);
-    if (steam) {
-        steam.getTracks().forEach(function (track) {
-            if (track.kind === "audio") {
-                console.log(track);
-                track.stop();
-            }
-        })
-    }
-    audioOpen = false;
-}
-
 window.onbeforeunload = function (event) {
-    conference.leave()
-    publicationGlobal.stop();
+    if(conference) conference.leave();
+    if(publicationGlobal) publicationGlobal.stop();
 }
