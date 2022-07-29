@@ -270,11 +270,17 @@ function getUserMedia(constrains, success, error) {
 }
 
 function onGetMediaSuccess(mediaStream) {
+    var steam = $('.local video').get(0).srcObject;
+    if (steam) {
+        steam.getTracks().forEach(function (track) {
+                track.stop();
+        })
+    }
+
     $('.local video').get(0).srcObject = mediaStream;
 }
 
 function onGetMediaError(error) {
-    $('.local video').get(0).srcObject = null;
     console.log("错误：", error);
 }
 
@@ -297,7 +303,6 @@ function closeVideo() {
     var steam = $('.local video').get(0).srcObject;
     if (steam) {
         steam.getTracks().forEach(function (track) {
-            console.log(track);
             if (track.kind === "video") {
                 track.stop();
             }
@@ -313,10 +318,11 @@ function openAudio() {
 
 function closeAudio() {
     var steam = $('.local video').get(0).srcObject;
+    console.log(steam);
     if (steam) {
         steam.getTracks().forEach(function (track) {
-            console.log(track);
             if (track.kind === "audio") {
+                console.log(track);
                 track.stop();
             }
         })
