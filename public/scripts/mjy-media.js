@@ -27,25 +27,35 @@
 // 该文件由杨天宇编写.
 'use strict';
 
-var videoDeviceIds = [];
-var audioDevIds = [];
-var videoOpen = false;
-var audioOpen = false;
+let gMediaStatus
+import("./mjy-media-status.js").then(mediaStatus => {
+    gMediaStatus = new mediaStatus.MediaStatus();
+})
 
-/// 获取设备ID
-navigator.mediaDevices.enumerateDevices().then(function (devices) {
-    devices.forEach(function (device) {
-        if (device.kind === "videoinput") {
-            videoDeviceIds.push(device);
-        } else if (device.kind === "audioinput") {
-            audioDevIds.push(device);
-        }
+const sVideoInput = 'videoinput';
+const sAudioInput = 'audioinput';
+let videoDevicShow = false;
+let audioDevicShow = false;
+
+function removeChidren(id) {
+    $(`#${id}`).children().remove();
+}
+
+/// 增加选择
+function addSelect(type) {
+    removeChidren(type);
+    /// 获取设备ID
+    navigator.mediaDevices.enumerateDevices().then(function (devices) {
+        devices.forEach(function (device) {
+            if (device.kind === type && device.deviceId && device.deviceId.length === 64) {
+                let $p = $(`<option value=${device.deviceId}>${device.label}</div>`);
+                $p.appendTo($(`#${type}`));
+            }
+        });
+    }).catch(function (err) {
+        console.log(err.name + ": " + err.message);
     });
-    console.log("videoDeviceIds",videoDeviceIds);
-    console.log("audioDevIds",audioDevIds);
-}).catch(function (err) {
-    console.log(err.name + ": " + err.message);
-});
+}
 
 /// 适配各种内核的API
 function getUserMedia(constrains, success, error) {
@@ -67,8 +77,6 @@ function getUserMedia(constrains, success, error) {
 /// 关闭视频流
 function destoryMediaStream() {
     var steam = $('.local video').get(0).srcObject;
-    console.log("before", $('.local video').get(0).srcObject);
-    console.log(steam);
     if (steam) {
         steam.getTracks().forEach(function (track) {
             track.stop();
@@ -76,45 +84,60 @@ function destoryMediaStream() {
     }
 }
 
-/// 获取视频流
+/// 成功获取视频流
 function onGetMediaSuccess(mediaStream) {
+    gMediaStatus.mediaStatusChanged();
     destoryMediaStream();
     $('.local video').get(0).srcObject = mediaStream;
 }
 
+/// 获取视频流失败
 function onGetMediaError(error) {
+    gMediaStatus.stopMediaChange();
     console.log("错误：", error);
 }
 
 /// 相应按下按钮
 function mediaChanged() {
-    if (false === audioOpen && false === videoOpen) {
-        destoryMediaStream();
-    } else {
-        getUserMedia({ video: videoOpen, audio: audioOpen }, onGetMediaSuccess, onGetMediaError);
+    if (gMediaStatus.isStatusChanged()) {
+        if (gMediaStatus.isStopMedia()) {
+            destoryMediaStream();
+            gMediaStatus.mediaStatusChanged();
+        } else {
+            let currentStatus = gMediaStatus.currentStatus();
+            getUserMedia(currentStatus, onGetMediaSuccess, onGetMediaError);
+        }
     }
 }
 
 /// 打开视频
 function openVideo() {
-    videoOpen = true;
+    gMediaStatus.openVideo(true);
     mediaChanged();
+    if (!videoDevicShow) {
+        addSelect(sVideoInput);
+        videoDevicShow = true;
+    }
 }
 
 /// 关闭视频
 function closeVideo() {
-    videoOpen = false;
+    gMediaStatus.openVideo(false);
     mediaChanged();
 }
 
 /// 打开麦克风
 function openAudio() {
-    audioOpen = true;
+    gMediaStatus.openAudio(true);
     mediaChanged();
+    if (!audioDevicShow) {
+        addSelect(sAudioInput);
+        audioDevicShow = true;
+    }
 }
 
 /// 关闭麦克风
 function closeAudio() {
-    audioOpen = false;
+    gMediaStatus.openAudio(false);
     mediaChanged();
 }
