@@ -41,6 +41,68 @@ function removeChidren(id) {
     $(`#${id}`).children().remove();
 }
 
+function checkMedia(){
+    /// 获取设备ID
+    navigator.mediaDevices.enumerateDevices().then(function (devices) {
+        let bHaveVideo=false;
+        let bHaveAudio=false;
+        devices.forEach(function (device) {
+            if (device.kind === sVideoInput) {
+                bHaveVideo = true;
+            } else if(device.kind === sAudioInput){
+                bHaveAudio = true;
+            }
+        });
+
+        if(!bHaveAudio){
+            $(`#audio`).attr('src', "./images/noaudio.svg");
+        }else{
+            $(`#audio`).attr('src', "./images/audioclose.svg");
+            $(`#audio`).bind('click',openAudio);
+        }
+
+        if(!bHaveVideo){
+            $(`#video`).attr('src', "./images/novideo.svg");
+        }else{
+            $(`#video`).attr('src', "./images/videoclose.svg");
+            $(`#video`).bind('click',openVideo);
+        }
+
+    }).catch(function (err) {
+        console.log("enumerateDevices error " + err.name + ": " + err.message);
+    });
+    
+    $(`#screen`).bind('click',openScreen);
+}
+
+/// 关闭屏幕共享
+function closeScreen(){
+    var steam = $('.localscreen video').get(0).srcObject;
+    if (steam) {
+        steam.getTracks().forEach(function (track) {
+            console.log("stop");
+            track.stop();
+        })
+    }
+
+    $(`#screen`).attr('src', "./images/screenclose.svg");
+    $(`#screen`).unbind('click',closeScreen);
+    $(`#screen`).bind('click',openScreen);
+}
+
+/// 打开屏幕共享
+function openScreen(){
+    navigator.mediaDevices.getDisplayMedia({video:true}).then(function (mediaStream){
+        console.log("get steam");
+        $('.localscreen video').get(0).srcObject = mediaStream;
+        $(`#screen`).attr('src', "./images/screen.svg");
+        $(`#screen`).unbind('click',openScreen);
+        $(`#screen`).bind('click',closeScreen);
+    }).catch(function (error){
+        console.log("错误：", error);
+    });
+}
+
 /// 增加选择
 function addSelect(type) {
     removeChidren(type);
@@ -53,7 +115,7 @@ function addSelect(type) {
             }
         });
     }).catch(function (err) {
-        console.log(err.name + ": " + err.message);
+        console.log("enumerateDevices error " + err.name + ": " + err.message);
     });
 }
 

@@ -50,6 +50,7 @@ function removeUi(id) {
 }
 
 const runSocketIOSample = function () {
+    checkMedia();
     return;
     let showedRemoteStreams = [];
     let myId;

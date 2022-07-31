@@ -30,23 +30,27 @@
 <meta charset="utf-8">
 
 <head>
-  <title>Intel&reg; Collaboration Suite for WebRTC Conference Sample</title>
+  <title>沐吉源&reg; 媒体服务器测试程序</title>
 </head>
 
 <body>
   <div style="width:320px;height:240" class="local">
     <video playsinline muted autoplay style="width:320px;height:240"></video>
   </div>
-  <button onclick="openVideo()">打开摄像头</button>
-  <select id="videoinput" value="1">
-    <option value="1">摄像头</option>
-  </select>
-  <button onclick="closeVideo()">关闭摄像头</button>
-  <button onclick="openAudio()">打开麦克风</button>
-  <select id="audioinput" value="1">
-    <option value="1">麦克风</option>
-  </select>
-  <button onclick="closeAudio()">关闭麦克风</button>
+  <div id="inputDev">
+    <input type="image" src="./images/videoclose.svg" id="video" />
+    <select id="videoinput" value="1">
+      <option value="1">摄像头</option>
+    </select>
+    <input type="image" src="./images/audioclose.svg" id="audio" />
+    <select id="audioinput" value="1">
+      <option value="1">麦克风</option>
+    </select>
+    <input type="image" src="./images/screenclose.svg" id="screen" />
+  </div>
+  <div style="width:640px;height:480" class="localscreen">
+    <video playsinline muted autoplay style="width:640px;height:480"></video>
+  </div>
   <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.2/socket.io.js" type="text/javascript"></script>
   <script src="scripts/owt.js" type="text/javascript"></script>

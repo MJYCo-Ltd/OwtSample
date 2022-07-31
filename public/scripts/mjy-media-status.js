@@ -27,6 +27,7 @@
 // 该文件由杨天宇编写.
 
 'use strict';
+
 export class MediaStatus{
     constructor(){
         this.videoOpen = false;
@@ -35,48 +36,85 @@ export class MediaStatus{
         this.audioStatusChanged = false;
     }
 
+    /// 类转换成字符串
     toString(){
-        return '{\n\tvideoOpen:{$this.videoOpen}\n\taudioOpen:{$this.audioOpen}\n\videoStatusChanged:{$this.videoStatusChanged}\n\audioStatusChanged:{$this.audioStatusChanged}\n}';
+        return '{\n\tvideoOpen:{$this.videoOpen}\
+                 \n\taudioOpen:{$this.audioOpen}\
+                 \n\tvideoStatusChanged:{$this.videoStatusChanged}\
+                 \n\taudioStatusChanged:{$this.audioStatusChanged}\
+                 \n}';
     }
 
+    /// 打开摄像头
     openVideo(bOpenVideo){
         if(this.videoOpen !== bOpenVideo){
             this.videoStatusChanged = true;
         }
     }
 
+    /// 打开麦克风
     openAudio(bOpenAuduio){
         if(this.audioOpen !== bOpenAuduio){
             this.audioStatusChanged = true;
         }
     }
 
+    /// 媒体状态更改
     mediaStatusChanged(){
         if(this.audioStatusChanged){
             this.audioStatusChanged = false;
             this.audioOpen = !this.audioOpen;
+
+            if(this.audioOpen){
+                $(`#audio`).attr('src', "./images/audio.svg");
+                $(`#audio`).unbind('click',openAudio);
+                $(`#audio`).bind('click',closeAudio);  
+                console.log("open audio");
+            }else{
+                $(`#audio`).attr('src', "./images/audioclose.svg");
+                $(`#audio`).unbind('click',closeAudio);
+                $(`#audio`).bind('click',openAudio);
+                console.log("close audio");
+            }
         }
 
         if(this.videoStatusChanged){
             this.videoStatusChanged = false;
             this.videoOpen = !this.videoOpen;
+
+            if(this.videoOpen){
+                $(`#video`).attr('src', "./images/video.svg");
+                $(`#video`).unbind('click',openVideo);
+                $(`#video`).bind('click',closeVideo);  
+                console.log("open video");
+            }else{
+                $(`#video`).attr('src', "./images/videoclose.svg");
+                $(`#video`).unbind('click',closeVideo);
+                $(`#video`).bind('click',openVideo);
+                console.log("close video");
+            }
         }
     }
 
+    /// 将修改状态置成false
     stopMediaChange(){
         this.audioStatusChanged = false;
         this.videoStatusChanged = false;
     }
 
+    /// 获取当前的状态
     currentStatus(){
-        return {video:(this.videoStatusChanged?!this.videoOpen:this.videoOpen),audio:(this.audioStatusChanged?!this.audioOpen:this.audioOpen)};
+        return {video:(this.videoStatusChanged?!this.videoOpen:this.videoOpen),
+                audio:(this.audioStatusChanged?!this.audioOpen:this.audioOpen)};
     }
 
+    /// 是否没有打开音视频
     isStopMedia(){
         return (((this.videoStatusChanged ? !this.videoOpen : this.videoOpen) === false) 
         && ((this.audioStatusChanged ? !this.audioOpen : this.audioOpen) === false));
     }
 
+    /// 是否由状态更改
     isStatusChanged(){
         return this.videoStatusChanged || this.audioStatusChanged;
     }
