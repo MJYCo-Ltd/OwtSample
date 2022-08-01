@@ -69,6 +69,11 @@ export class MediaStatus {
         $(`#video`).attr('src', "./images/videoclose.svg");
         $(`#video`).unbind('click', closeVideo);
         $(`#video`).bind('click', openVideo);
+        $(`#selfVideo`).unbind('dblclick',this.showFullScreen);
+    }
+
+    showFullScreen(){
+        showFullScreen('selfVideo');
     }
 
     /// 媒体状态更改
@@ -94,6 +99,7 @@ export class MediaStatus {
                 $(`#video`).attr('src', "./images/video.svg");
                 $(`#video`).unbind('click', openVideo);
                 $(`#video`).bind('click', closeVideo);
+                $(`#selfVideo`).bind('dblclick',this.showFullScreen);
             }else{
                 this.closeVideoUI();
             }

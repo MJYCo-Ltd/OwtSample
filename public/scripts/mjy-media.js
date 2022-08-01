@@ -93,11 +93,22 @@ function closeScreenUI() {
 function closeScreen() {
     var steam = $('.localscreen video').get(0).srcObject;
     if (steam) {
-        steam.getVideoTracks().forEach(function (track) {
+        steam.getTracks().forEach(function (track) {
             track.stop();
         })
     }
     closeScreenUI();
+}
+
+function showFullScreen(id){
+    var element = document.getElementById(id);
+    if(element.requestFullScreen) {
+        element.requestFullScreen(); 
+    } else if(element.mozRequestFullScreen) {
+        element.mozRequestFullScreen(); 
+    } else if(element.webkitRequestFullScreen) {
+        element.webkitRequestFullScreen(); 
+    }
 }
 
 function openScreenUI() {
@@ -108,7 +119,7 @@ function openScreenUI() {
 
 /// 打开屏幕共享
 function openScreen() {
-    navigator.mediaDevices.getDisplayMedia({ video: true }).then(function (mediaStream) {
+    navigator.mediaDevices.getDisplayMedia({ video: true,audio:true}).then(function (mediaStream) {
         $('.localscreen video').get(0).srcObject = mediaStream;
         openScreenUI();
         mediaStream.getVideoTracks()[0].addEventListener('ended', closeScreenUI);
