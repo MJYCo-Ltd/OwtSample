@@ -41,62 +41,78 @@ function removeChidren(id) {
     $(`#${id}`).children().remove();
 }
 
-function checkMedia(){
+navigator.mediaDevices.ondevicechange = deviceChanged;
+
+/// 媒体设备状态更改
+function deviceChanged(event) {
+    console.log(event)
+}
+
+/// 检查媒体是否支持视频或者音频
+function checkMedia() {
     /// 获取设备ID
     navigator.mediaDevices.enumerateDevices().then(function (devices) {
-        let bHaveVideo=false;
-        let bHaveAudio=false;
+        let bHaveVideo = false;
+        let bHaveAudio = false;
         devices.forEach(function (device) {
-            if (device.kind === sVideoInput){
+            if (device.kind === sVideoInput) {
                 bHaveVideo = true;
-            } else if(device.kind === sAudioInput){
+            } else if (device.kind === sAudioInput) {
                 bHaveAudio = true;
             }
         });
 
-        if(!bHaveAudio){
+        if (!bHaveAudio) {
             $(`#audio`).attr('src', "./images/noaudio.svg");
-        }else{
+        } else {
             $(`#audio`).attr('src', "./images/audioclose.svg");
-            $(`#audio`).bind('click',openAudio);
+            $(`#audio`).bind('click', openAudio);
         }
 
-        if(!bHaveVideo){
+        if (!bHaveVideo) {
             $(`#video`).attr('src', "./images/novideo.svg");
-        }else{
+        } else {
             $(`#video`).attr('src', "./images/videoclose.svg");
-            $(`#video`).bind('click',openVideo);
+            $(`#video`).bind('click', openVideo);
         }
 
     }).catch(function (err) {
         console.log("enumerateDevices error " + err.name + ": " + err.message);
     });
 
-    $(`#screen`).bind('click',openScreen);
+    $(`#screen`).bind('click', openScreen);
+}
+
+function closeScreenUI() {
+    $(`#screen`).attr('src', "./images/screenclose.svg");
+    $(`#screen`).unbind('click', closeScreen);
+    $(`#screen`).bind('click', openScreen);
 }
 
 /// 关闭屏幕共享
-function closeScreen(){
+function closeScreen() {
     var steam = $('.localscreen video').get(0).srcObject;
     if (steam) {
-        steam.getTracks().forEach(function (track) {
+        steam.getVideoTracks().forEach(function (track) {
             track.stop();
         })
     }
+    closeScreenUI();
+}
 
-    $(`#screen`).attr('src', "./images/screenclose.svg");
-    $(`#screen`).unbind('click',closeScreen);
-    $(`#screen`).bind('click',openScreen);
+function openScreenUI() {
+    $(`#screen`).attr('src', "./images/screen.svg");
+    $(`#screen`).unbind('click', openScreen);
+    $(`#screen`).bind('click', closeScreen);
 }
 
 /// 打开屏幕共享
-function openScreen(){
-    navigator.mediaDevices.getDisplayMedia({video:true}).then(function (mediaStream){
+function openScreen() {
+    navigator.mediaDevices.getDisplayMedia({ video: true }).then(function (mediaStream) {
         $('.localscreen video').get(0).srcObject = mediaStream;
-        $(`#screen`).attr('src', "./images/screen.svg");
-        $(`#screen`).unbind('click',openScreen);
-        $(`#screen`).bind('click',closeScreen);
-    }).catch(function (error){
+        openScreenUI();
+        mediaStream.getVideoTracks()[0].addEventListener('ended', closeScreenUI);
+    }).catch(function (error) {
         console.log("错误：", error);
     });
 }
@@ -110,9 +126,9 @@ function addSelect(type) {
             if (device.kind === type && device.deviceId && device.deviceId.length === 64) {
                 let $p = $(`<option value=${device.deviceId}>${device.label}</div>`);
                 $p.appendTo($(`#${type}`));
-                if(type === sVideoInput){
+                if (type === sVideoInput) {
                     videoDevicShow = true;
-                }else if(type === sAudioInput){
+                } else if (type === sAudioInput) {
                     audioDevicShow = true;
                 }
             }
@@ -153,6 +169,16 @@ function destoryMediaStream() {
 function onGetMediaSuccess(mediaStream) {
     gMediaStatus.mediaStatusChanged();
     destoryMediaStream();
+    let videoTracks = mediaStream.getVideoTracks();
+    if(videoTracks && videoTracks.length > 0){
+        videoTracks[0].addEventListener('ended', gMediaStatus.closeVideoUI);
+    }
+
+    let audioTracks = mediaStream.getAudioTracks();
+    if(audioTracks && audioTracks.length > 0){
+        audioTracks[0].addEventListener('ended', gMediaStatus.closeAudioUI);
+    }
+
     $('.local video').get(0).srcObject = mediaStream;
 }
 
