@@ -47,7 +47,7 @@ function checkMedia(){
         let bHaveVideo=false;
         let bHaveAudio=false;
         devices.forEach(function (device) {
-            if (device.kind === sVideoInput) {
+            if (device.kind === sVideoInput){
                 bHaveVideo = true;
             } else if(device.kind === sAudioInput){
                 bHaveAudio = true;
@@ -80,7 +80,6 @@ function closeScreen(){
     var steam = $('.localscreen video').get(0).srcObject;
     if (steam) {
         steam.getTracks().forEach(function (track) {
-            console.log("stop");
             track.stop();
         })
     }
@@ -112,6 +111,11 @@ function addSelect(type) {
             if (device.kind === type && device.deviceId && device.deviceId.length === 64) {
                 let $p = $(`<option value=${device.deviceId}>${device.label}</div>`);
                 $p.appendTo($(`#${type}`));
+                if(type === sVideoInput){
+                    videoDevicShow = true;
+                }else if(type === sAudioInput){
+                    audioDevicShow = true;
+                }
             }
         });
     }).catch(function (err) {
@@ -178,7 +182,6 @@ function openVideo() {
     mediaChanged();
     if (!videoDevicShow) {
         addSelect(sVideoInput);
-        videoDevicShow = true;
     }
 }
 
@@ -194,7 +197,6 @@ function openAudio() {
     mediaChanged();
     if (!audioDevicShow) {
         addSelect(sAudioInput);
-        audioDevicShow = true;
     }
 }
 

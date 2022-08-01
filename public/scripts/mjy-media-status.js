@@ -69,12 +69,10 @@ export class MediaStatus{
                 $(`#audio`).attr('src', "./images/audio.svg");
                 $(`#audio`).unbind('click',openAudio);
                 $(`#audio`).bind('click',closeAudio);  
-                console.log("open audio");
             }else{
                 $(`#audio`).attr('src', "./images/audioclose.svg");
                 $(`#audio`).unbind('click',closeAudio);
                 $(`#audio`).bind('click',openAudio);
-                console.log("close audio");
             }
         }
 
@@ -86,12 +84,10 @@ export class MediaStatus{
                 $(`#video`).attr('src', "./images/video.svg");
                 $(`#video`).unbind('click',openVideo);
                 $(`#video`).bind('click',closeVideo);  
-                console.log("open video");
             }else{
                 $(`#video`).attr('src', "./images/videoclose.svg");
                 $(`#video`).unbind('click',closeVideo);
                 $(`#video`).bind('click',openVideo);
-                console.log("close video");
             }
         }
     }
