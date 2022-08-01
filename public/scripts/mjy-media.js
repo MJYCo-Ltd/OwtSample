@@ -71,7 +71,7 @@ function checkMedia(){
     }).catch(function (err) {
         console.log("enumerateDevices error " + err.name + ": " + err.message);
     });
-    
+
     $(`#screen`).bind('click',openScreen);
 }
 
@@ -92,7 +92,6 @@ function closeScreen(){
 /// 打开屏幕共享
 function openScreen(){
     navigator.mediaDevices.getDisplayMedia({video:true}).then(function (mediaStream){
-        console.log("get steam");
         $('.localscreen video').get(0).srcObject = mediaStream;
         $(`#screen`).attr('src', "./images/screen.svg");
         $(`#screen`).unbind('click',openScreen);
