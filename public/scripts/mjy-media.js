@@ -201,7 +201,7 @@ function onGetMediaSuccess(mediaStream) {
         mediaStream, new Owt.Base.StreamSourceInfo(
             'mic', 'camera'));
 
-    conference.publish(localStream, publishOption).then(publication => {
+    conference.publish(localStream, gMediaStatus.currentStatus()).then(publication => {
         cameraPublicationArray.push(publication);
         mixStream(myRoom, publication.id, 'common', serverUrlBase)
         publication.addEventListener('error', (err) => {
