@@ -55,6 +55,16 @@ var mixStream = function (room, stream, view, host) {
         onResponse, host);
 };
 
+var rmStream = function(room,stream,view,host){
+    var jsonPatch = [{
+        op: 'remove',
+        path: '/info/inViews',
+        value: view
+    }];
+    send('PATCH', '/rooms/' + room + '/streams/' + stream, jsonPatch,
+        onResponse, host);
+}
+
 var startStreamingIn = function (room, inUrl, host) {
     var options = {
         url: inUrl,

@@ -63,7 +63,7 @@ app.use(function(req, res, next) {
   }
 });
 
-//icsREST.API.init('62d2c8fe692a63075629e814', '8BlgJavuN7p+m/Vq0UHjpoYC8Fllw93wLhSbskwV4Lqbqi4Pl2ECB5PwqW0dGJZHFwqT1BQ+o6Z64okX41/tpzFzs33lvpDnUmE0fIuBTHgOeSG2GmoVPJqZ1xWJLQNyTe9Nqu2H27o60r1/oPvLe2mfyS4Z4/6NFv2WVIkUmsw=', 'https://mg.izsw.net:3000/', false);
+// icsREST.API.init('62d2c8fe692a63075629e814', '8BlgJavuN7p+m/Vq0UHjpoYC8Fllw93wLhSbskwV4Lqbqi4Pl2ECB5PwqW0dGJZHFwqT1BQ+o6Z64okX41/tpzFzs33lvpDnUmE0fIuBTHgOeSG2GmoVPJqZ1xWJLQNyTe9Nqu2H27o60r1/oPvLe2mfyS4Z4/6NFv2WVIkUmsw=', 'https://10.31.2.177:3000/', false);
 icsREST.API.init('62e0f02ef78b4404f51ef7b4', 'KLS3p3JD5Youv8kgoC0NUKQjTw3BsRApLoU9OyEdGgGThtULF+Ltwg6moO8amvpzMiQqWb8C0t+s8QPyJ7iljbK+s+V8ovP19jKD+cXCFGq/vF7hxuBoSx2yzQwYZ/9kTEUrT+mRdyzhnNTfvKSyYvnP9/upu/Wo5/8FHpOh8sY=', 'https://mg.izsw.net:3000/', false);
 var sampleRoom;
 var pageOption = { page: 1, per_page: 100 };

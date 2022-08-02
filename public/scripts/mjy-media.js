@@ -27,7 +27,7 @@
 // 该文件由杨天宇编写.
 'use strict';
 
-let gMediaStatus
+let gMediaStatus;
 import("./mjy-media-status.js").then(mediaStatus => {
     gMediaStatus = new mediaStatus.MediaStatus();
 })
@@ -100,14 +100,14 @@ function closeScreen() {
     closeScreenUI();
 }
 
-function showFullScreen(id){
+function showFullScreen(id) {
     var element = document.getElementById(id);
-    if(element.requestFullScreen) {
-        element.requestFullScreen(); 
-    } else if(element.mozRequestFullScreen) {
-        element.mozRequestFullScreen(); 
-    } else if(element.webkitRequestFullScreen) {
-        element.webkitRequestFullScreen(); 
+    if (element.requestFullScreen) {
+        element.requestFullScreen();
+    } else if (element.mozRequestFullScreen) {
+        element.mozRequestFullScreen();
+    } else if (element.webkitRequestFullScreen) {
+        element.webkitRequestFullScreen();
     }
 }
 
@@ -119,7 +119,7 @@ function openScreenUI() {
 
 /// 打开屏幕共享
 function openScreen() {
-    navigator.mediaDevices.getDisplayMedia({ video: true,audio:true}).then(function (mediaStream) {
+    navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(function (mediaStream) {
         $('.localscreen video').get(0).srcObject = mediaStream;
         openScreenUI();
         mediaStream.getVideoTracks()[0].addEventListener('ended', closeScreenUI);
@@ -173,6 +173,8 @@ function destoryMediaStream() {
         steam.getTracks().forEach(function (track) {
             track.stop();
         })
+
+        rmStream(myRoom, publicationGlobal.id, 'common', serverUrlBase)
     }
 }
 
@@ -181,14 +183,27 @@ function onGetMediaSuccess(mediaStream) {
     gMediaStatus.mediaStatusChanged();
     destoryMediaStream();
     let videoTracks = mediaStream.getVideoTracks();
-    if(videoTracks && videoTracks.length > 0){
+    if (videoTracks && videoTracks.length > 0) {
         videoTracks[0].addEventListener('ended', gMediaStatus.closeVideoUI);
     }
 
     let audioTracks = mediaStream.getAudioTracks();
-    if(audioTracks && audioTracks.length > 0){
+    if (audioTracks && audioTracks.length > 0) {
         audioTracks[0].addEventListener('ended', gMediaStatus.closeAudioUI);
     }
+
+    console.log("onGetMediaSuccess");
+    localStream = new Owt.Base.LocalStream(
+        mediaStream, new Owt.Base.StreamSourceInfo(
+            'mic', 'camera'));
+
+    conference.publish(localStream, publishOption).then(publication => {
+        publicationGlobal = publication;
+        mixStream(myRoom, publication.id, 'common', serverUrlBase)
+        publication.addEventListener('error', (err) => {
+            console.log('Publication error: ' + err.error.message);
+        });
+    });
 
     $('.local video').get(0).srcObject = mediaStream;
 }
