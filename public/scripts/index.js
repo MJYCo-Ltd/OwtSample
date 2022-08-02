@@ -36,13 +36,6 @@ const serverUrlBase = undefined;
 let localStream;
 let myId;
 let myRoom;
-let publishOption = {
-    // video: [
-    //     { rid: 'q', active: true/*, scaleResolutionDownBy: 4.0*/ },
-    //     { rid: 'h', active: true/*, scaleResolutionDownBy: 2.0*/ },
-    //     { rid: 'f', active: true }
-    // ]
-};
 
 function clearAllCameraPublication(){
     cameraPublicationArray.forEach(element => {
