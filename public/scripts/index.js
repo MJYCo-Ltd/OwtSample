@@ -29,8 +29,7 @@
 'use strict';
 
 let conference;
-let publicationGlobal;
-
+let cameraPublicationArray = [];
 // Change to your sample server's URL if it's not deployed on the same machine
 // as this page.
 const serverUrlBase = undefined;
@@ -44,6 +43,13 @@ let publishOption = {
     //     { rid: 'f', active: true }
     // ]
 };
+
+function clearAllCameraPublication(){
+    cameraPublicationArray.forEach(element => {
+        element.stop();
+    });
+    cameraPublicationArray=[];
+}
 
 function getParameterByName(name) {
     name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
@@ -95,5 +101,5 @@ window.onload = function () {
 
 window.onbeforeunload = function (event) {
     if (conference) conference.leave();
-    if (publicationGlobal) publicationGlobal.stop();
+    clearAllCameraPublication();
 }

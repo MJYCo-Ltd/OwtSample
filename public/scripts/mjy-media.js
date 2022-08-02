@@ -174,10 +174,7 @@ function destoryMediaStream() {
             track.stop();
         })
 
-        if (publicationGlobal) {
-            publicationGlobal.stop();
-            publicationGlobal = null;
-        }
+        clearAllCameraPublication();
 
         $('.local video').get(0).srcObject = null;
     }
@@ -205,7 +202,7 @@ function onGetMediaSuccess(mediaStream) {
             'mic', 'camera'));
 
     conference.publish(localStream, publishOption).then(publication => {
-        publicationGlobal = publication;
+        cameraPublicationArray.push(publication);
         mixStream(myRoom, publication.id, 'common', serverUrlBase)
         publication.addEventListener('error', (err) => {
             console.log('Publication error: ' + err.error.message);
