@@ -174,7 +174,12 @@ function destoryMediaStream() {
             track.stop();
         })
 
-        rmStream(myRoom, publicationGlobal.id, 'common', serverUrlBase)
+        if (publicationGlobal) {
+            publicationGlobal.stop();
+            publicationGlobal = null;
+        }
+
+        $('.local video').get(0).srcObject = null;
     }
 }
 
@@ -192,6 +197,8 @@ function onGetMediaSuccess(mediaStream) {
         audioTracks[0].addEventListener('ended', gMediaStatus.closeAudioUI);
     }
 
+    $('.local video').get(0).srcObject = mediaStream;
+
     console.log("onGetMediaSuccess");
     localStream = new Owt.Base.LocalStream(
         mediaStream, new Owt.Base.StreamSourceInfo(
@@ -204,8 +211,6 @@ function onGetMediaSuccess(mediaStream) {
             console.log('Publication error: ' + err.error.message);
         });
     });
-
-    $('.local video').get(0).srcObject = mediaStream;
 }
 
 /// 获取视频流失败

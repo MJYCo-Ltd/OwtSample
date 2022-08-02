@@ -55,7 +55,13 @@ var mixStream = function (room, stream, view, host) {
         onResponse, host);
 };
 
-var rmStream = function(room,stream,view,host){
+var rmStream = function (room, stream, host) {
+    let jsonPatch;
+    send('DELETE', '/rooms/' + room + '/streams/' + stream, jsonPatch,
+        onResponse, host);
+};
+
+var cancelMixStream = function(room,stream,view,host){
     var jsonPatch = [{
         op: 'remove',
         path: '/info/inViews',
@@ -63,7 +69,7 @@ var rmStream = function(room,stream,view,host){
     }];
     send('PATCH', '/rooms/' + room + '/streams/' + stream, jsonPatch,
         onResponse, host);
-}
+};
 
 var startStreamingIn = function (room, inUrl, host) {
     var options = {
