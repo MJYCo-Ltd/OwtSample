@@ -28,12 +28,45 @@
 
 'use strict';
 
-export class MediaStatus {
+export class MediaDeviceStatus {
     constructor() {
         this.videoOpen = false;
         this.audioOpen = false;
         this.videoStatusChanged = false;
         this.audioStatusChanged = false;
+        this.clearDeviceList();
+    }
+
+    /// 放入音频设备
+    pushAudioDevice(sAudioDeviceID){
+        this.audioDeviceList.push(sAudioDeviceID);
+    }
+
+    /// 放入视频设备
+    pushVideoDevice(sVideoDeviceID){
+        this.videoDeviceList.push(sVideoDeviceID);
+    }
+
+    /// 更改音频设备
+    changeAudio(nIndex){
+        if(nIndex >-1 && nIndex < this.audioDeviceList.length){
+            this.audioDeviceIndex = nIndex;
+        }
+    }
+
+    /// 更改视频设备
+    changeVideo(nIndex){
+        if(nIndex >-1 && nIndex < this.videoDeviceList.length){
+            this.audioDeviceIndex = nIndex;
+        }
+    }
+
+    /// 清空设备列表
+    clearDeviceList(){
+        this.audioDeviceList = [];
+        this.videoDeviceList = [];
+        this.audioDeviceIndex = -1;
+        this.videoDeviceIndex = -1;
     }
 
     /// 类转换成字符串
@@ -42,6 +75,8 @@ export class MediaStatus {
                  \n\taudioOpen:{$this.audioOpen}\
                  \n\tvideoStatusChanged:{$this.videoStatusChanged}\
                  \n\taudioStatusChanged:{$this.audioStatusChanged}\
+                 \n\taudioList:{$this.audioDeviceList}\
+                 \n\tvideoList:{$this.videoDeviceList}\
                  \n}';
     }
 
@@ -59,21 +94,35 @@ export class MediaStatus {
         }
     }
 
+    /// 关闭声音
     closeAudioUI() {
-        $(`#audio`).attr('src', "./images/audioclose.svg");
-        $(`#audio`).unbind('click', closeAudio);
-        $(`#audio`).bind('click', openAudio);
+        audioObj.attr('src', "./images/audioclose.svg");
+        audioObj.unbind('click', closeAudio);
+        audioObj.bind('click', openAudio);
     }
 
+    /// 关闭视频
     closeVideoUI() {
-        $(`#video`).attr('src', "./images/videoclose.svg");
-        $(`#video`).unbind('click', closeVideo);
-        $(`#video`).bind('click', openVideo);
-        $(`#selfVideo`).unbind('dblclick',this.showFullScreen);
+        videoObj.attr('src', "./images/videoclose.svg");
+        videoObj.unbind('click', closeVideo);
+        videoObj.bind('click', openVideo);
+        selfVideoObj.unbind('dblclick',this.fullScreen);
     }
 
-    showFullScreen(){
-        showFullScreen('selfVideo');
+    fullScreen(){
+        this.showFullScreen('selfVideo');
+    }
+
+    /// 全屏显示某个
+    showFullScreen(id) {
+        var element = document.getElementById(id);
+        if (element.requestFullScreen) {
+            element.requestFullScreen();
+        } else if (element.mozRequestFullScreen) {
+            element.mozRequestFullScreen();
+        } else if (element.webkitRequestFullScreen) {
+            element.webkitRequestFullScreen();
+        }
     }
 
     /// 媒体状态更改
@@ -83,9 +132,9 @@ export class MediaStatus {
             this.audioOpen = !this.audioOpen;
 
             if (this.audioOpen) {
-                $(`#audio`).attr('src', "./images/audio.svg");
-                $(`#audio`).unbind('click', openAudio);
-                $(`#audio`).bind('click', closeAudio);
+                audioObj.attr('src', "./images/audio.svg");
+                audioObj.unbind('click', openAudio);
+                audioObj.bind('click', closeAudio);
             }else{
                 this.closeAudioUI();
             }
@@ -96,10 +145,10 @@ export class MediaStatus {
             this.videoOpen = !this.videoOpen;
 
             if (this.videoOpen) {
-                $(`#video`).attr('src', "./images/video.svg");
-                $(`#video`).unbind('click', openVideo);
-                $(`#video`).bind('click', closeVideo);
-                $(`#selfVideo`).bind('dblclick',this.showFullScreen);
+                videoObj.attr('src', "./images/video.svg");
+                videoObj.unbind('click', openVideo);
+                videoObj.bind('click', closeVideo);
+                selfVideoObj.bind('dblclick',this.fullScreen);
             }else{
                 this.closeVideoUI();
             }
@@ -114,10 +163,36 @@ export class MediaStatus {
 
     /// 获取当前的状态
     currentStatus() {
-        return {
+        let obj = {
             video: (this.videoStatusChanged ? !this.videoOpen : this.videoOpen),
             audio: (this.audioStatusChanged ? !this.audioOpen : this.audioOpen)
-        };
+        }
+
+        /// 如果开启了音频
+        if(obj.audio){
+            if(this.audioDeviceIndex > -1){
+                obj.audio = {
+                    advanced:[
+                        {deviceId:this.audioDeviceList[this.audioDeviceIndex]},
+                        {channelCount:2}
+                    ]
+                }
+            }
+        }
+
+        /// 如果开启了视频
+        if(obj.video){
+            if(this.videoDeviceIndex > -1){
+                obj.video = {
+                    advanced:[
+                        {deviceId:this.videoDeviceList[this.videoDeviceIndex]},
+                        {facingMode:'user'}
+                    ]
+                }
+            }
+        }
+
+        return(obj);
     }
 
     /// 是否没有打开音视频

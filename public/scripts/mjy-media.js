@@ -27,15 +27,26 @@
 // 该文件由杨天宇编写.
 'use strict';
 
-let gMediaStatus;
+let gMediaDeviceStatus;
 import("./mjy-media-status.js").then(mediaStatus => {
-    gMediaStatus = new mediaStatus.MediaStatus();
+    gMediaDeviceStatus = new mediaStatus.MediaDeviceStatus();
 })
 
 const sVideoInput = 'videoinput';
 const sAudioInput = 'audioinput';
-let videoDevicShow = false;
-let audioDevicShow = false;
+
+let screenObj = $(`#screen`);
+let audioObj = $(`#audio`);
+let videoObj = $(`#video`);
+let selfVideoObj = $(`#selfVideo`);
+let localScreenObj = $('.localscreen video').get(0);
+let localObj = $('.local video').get(0);
+let bCheckedMedia = false;
+
+/// 绑定默认的点击事件
+audioObj.bind('click', openAudio);
+videoObj.bind('click', openVideo);
+screenObj.bind('click', openScreen);
 
 function removeChidren(id) {
     $(`#${id}`).children().remove();
@@ -45,53 +56,76 @@ navigator.mediaDevices.ondevicechange = deviceChanged;
 
 /// 媒体设备状态更改
 function deviceChanged(event) {
-    console.log(event)
+    checkMedia();
 }
 
-/// 检查媒体是否支持视频或者音频
-function checkMedia() {
+/// 用于获取媒体信息
+function onGetMediaInfo(mediaStream) {
+    mediaStream.getTracks().forEach(function (track) {
+        track.stop();
+    });
+
+    /// 清空列表
+    gMediaDeviceStatus.clearDeviceList();
+
     /// 获取设备ID
     navigator.mediaDevices.enumerateDevices().then(function (devices) {
         let bHaveVideo = false;
         let bHaveAudio = false;
+        let nAudioIndex = 0;
+        let nVideoIndex = 0;
+        removeChidren(sVideoInput);
+        removeChidren(sAudioInput);
+
         devices.forEach(function (device) {
             if (device.kind === sVideoInput) {
+                if (device.deviceId && device.deviceId.length === 64) {
+                    let $p = $(`<option value=${nVideoIndex}>${device.label}</div>`);
+                    $p.appendTo($(`#${sVideoInput}`));
+                    gMediaDeviceStatus.pushVideoDevice(device.deviceId);
+                    ++nVideoIndex;
+                }
                 bHaveVideo = true;
             } else if (device.kind === sAudioInput) {
+                if (device.deviceId && device.deviceId.length === 64) {
+                    let $p = $(`<option value=${nAudioIndex}>${device.label}</div>`);
+                    $p.appendTo($(`#${sAudioInput}`));
+                    gMediaDeviceStatus.pushAudioDevice(device.deviceId);
+                    ++nAudioIndex;
+                }
                 bHaveAudio = true;
             }
         });
 
         if (!bHaveAudio) {
-            $(`#audio`).attr('src', "./images/noaudio.svg");
-        } else {
-            $(`#audio`).attr('src', "./images/audioclose.svg");
-            $(`#audio`).bind('click', openAudio);
+            audioObj.attr('src', "./images/noaudio.svg");
         }
 
         if (!bHaveVideo) {
-            $(`#video`).attr('src', "./images/novideo.svg");
-        } else {
-            $(`#video`).attr('src', "./images/videoclose.svg");
-            $(`#video`).bind('click', openVideo);
+            videoObj.attr('src', "./images/novideo.svg");
         }
 
     }).catch(function (err) {
         console.log("enumerateDevices error " + err.name + ": " + err.message);
     });
 
-    $(`#screen`).bind('click', openScreen);
+    bCheckedMedia = true;
+}
+
+/// 检查媒体是否支持视频或者音频
+function checkMedia() {
+    getUserMedia({ video: true, audio: true },onGetMediaInfo, onGetMediaError);
 }
 
 function closeScreenUI() {
-    $(`#screen`).attr('src', "./images/screenclose.svg");
-    $(`#screen`).unbind('click', closeScreen);
-    $(`#screen`).bind('click', openScreen);
+    screenObj.attr('src', "./images/screenclose.svg");
+    screenObj.unbind('click', closeScreen);
+    screenObj.bind('click', openScreen);
 }
 
 /// 关闭屏幕共享
 function closeScreen() {
-    var steam = $('.localscreen video').get(0).srcObject;
+    var steam = localScreenObj.srcObject;
     if (steam) {
         steam.getTracks().forEach(function (track) {
             track.stop();
@@ -100,27 +134,16 @@ function closeScreen() {
     closeScreenUI();
 }
 
-function showFullScreen(id) {
-    var element = document.getElementById(id);
-    if (element.requestFullScreen) {
-        element.requestFullScreen();
-    } else if (element.mozRequestFullScreen) {
-        element.mozRequestFullScreen();
-    } else if (element.webkitRequestFullScreen) {
-        element.webkitRequestFullScreen();
-    }
-}
-
 function openScreenUI() {
-    $(`#screen`).attr('src', "./images/screen.svg");
-    $(`#screen`).unbind('click', openScreen);
-    $(`#screen`).bind('click', closeScreen);
+    screenObj.attr('src', "./images/screen.svg");
+    screenObj.unbind('click', openScreen);
+    screenObj.bind('click', closeScreen);
 }
 
 /// 打开屏幕共享
 function openScreen() {
     navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(function (mediaStream) {
-        $('.localscreen video').get(0).srcObject = mediaStream;
+        localScreenObj.srcObject = mediaStream;
         openScreenUI();
         mediaStream.getVideoTracks()[0].addEventListener('ended', closeScreenUI);
     }).catch(function (error) {
@@ -128,47 +151,22 @@ function openScreen() {
     });
 }
 
-/// 增加选择
-function addSelect(type) {
-    removeChidren(type);
-    /// 获取设备ID
-    navigator.mediaDevices.enumerateDevices().then(function (devices) {
-        devices.forEach(function (device) {
-            if (device.kind === type && device.deviceId && device.deviceId.length === 64) {
-                let $p = $(`<option value=${device.deviceId}>${device.label}</div>`);
-                $p.appendTo($(`#${type}`));
-                if (type === sVideoInput) {
-                    videoDevicShow = true;
-                } else if (type === sAudioInput) {
-                    audioDevicShow = true;
-                }
-            }
-        });
-    }).catch(function (err) {
-        console.log("enumerateDevices error " + err.name + ": " + err.message);
-    });
-}
-
 /// 适配各种内核的API
 function getUserMedia(constrains, success, error) {
     if (navigator.mediaDevices.getUserMedia) {
-        //最新标准API
         navigator.mediaDevices.getUserMedia(constrains).then(success).catch(error);
     } else if (navigator.webkitGetUserMedia) {
-        //webkit内核浏览器
         navigator.webkitGetUserMedia(constrains).then(success).catch(error);
     } else if (navigator.mozGetUserMedia) {
-        //Firefox浏览器
         navagator.mozGetUserMedia(constrains).then(success).catch(error);
     } else if (navigator.getUserMedia) {
-        //旧版API
         navigator.getUserMedia(constrains).then(success).catch(error);
     }
 }
 
 /// 关闭视频流
 function destoryMediaStream() {
-    var steam = $('.local video').get(0).srcObject;
+    var steam = localObj.srcObject;
     if (steam) {
         steam.getTracks().forEach(function (track) {
             track.stop();
@@ -176,32 +174,24 @@ function destoryMediaStream() {
 
         clearAllCameraPublication();
 
-        $('.local video').get(0).srcObject = null;
+        localObj.srcObject = null;
     }
 }
 
 /// 成功获取视频流
 function onGetMediaSuccess(mediaStream) {
-    gMediaStatus.mediaStatusChanged();
+    gMediaDeviceStatus.mediaStatusChanged();
     destoryMediaStream();
     let videoTracks = mediaStream.getVideoTracks();
-    if (videoTracks && videoTracks.length > 0) {
-        videoTracks[0].addEventListener('ended', gMediaStatus.closeVideoUI);
-    }
+    if (videoTracks && videoTracks.length > 0) videoTracks[0].addEventListener('ended', gMediaDeviceStatus.closeVideoUI);
 
     let audioTracks = mediaStream.getAudioTracks();
-    if (audioTracks && audioTracks.length > 0) {
-        audioTracks[0].addEventListener('ended', gMediaStatus.closeAudioUI);
-    }
+    if (audioTracks && audioTracks.length > 0) audioTracks[0].addEventListener('ended', gMediaDeviceStatus.closeAudioUI);
 
-    $('.local video').get(0).srcObject = mediaStream;
+    localObj.srcObject = mediaStream;
 
-    console.log("onGetMediaSuccess");
-    localStream = new Owt.Base.LocalStream(
-        mediaStream, new Owt.Base.StreamSourceInfo(
-            'mic', 'camera'));
-
-    conference.publish(localStream, gMediaStatus.currentStatus()).then(publication => {
+    conference.publish(new Owt.Base.LocalStream(mediaStream, new Owt.Base.StreamSourceInfo('mic', 'camera')),
+     gMediaDeviceStatus.currentStatus()).then(publication => {
         cameraPublicationArray.push(publication);
         mixStream(myRoom, publication.id, 'common', serverUrlBase)
         publication.addEventListener('error', (err) => {
@@ -212,49 +202,42 @@ function onGetMediaSuccess(mediaStream) {
 
 /// 获取视频流失败
 function onGetMediaError(error) {
-    gMediaStatus.stopMediaChange();
+    gMediaDeviceStatus.stopMediaChange();
     console.log("错误：", error);
 }
 
 /// 相应按下按钮
 function mediaChanged() {
-    if (gMediaStatus.isStatusChanged()) {
-        if (gMediaStatus.isStopMedia()) {
+    if (gMediaDeviceStatus.isStatusChanged()) {
+        if (gMediaDeviceStatus.isStopMedia()) {
             destoryMediaStream();
-            gMediaStatus.mediaStatusChanged();
-        } else {
-            let currentStatus = gMediaStatus.currentStatus();
-            getUserMedia(currentStatus, onGetMediaSuccess, onGetMediaError);
-        }
+            gMediaDeviceStatus.mediaStatusChanged();
+        } else getUserMedia(gMediaDeviceStatus.currentStatus(), onGetMediaSuccess, onGetMediaError);
     }
 }
 
 /// 打开视频
 function openVideo() {
-    gMediaStatus.openVideo(true);
+    if(!bCheckedMedia) checkMedia();
+    gMediaDeviceStatus.openVideo(true);
     mediaChanged();
-    if (!videoDevicShow) {
-        addSelect(sVideoInput);
-    }
 }
 
 /// 关闭视频
 function closeVideo() {
-    gMediaStatus.openVideo(false);
+    gMediaDeviceStatus.openVideo(false);
     mediaChanged();
 }
 
 /// 打开麦克风
 function openAudio() {
-    gMediaStatus.openAudio(true);
+    if(!bCheckedMedia) checkMedia();
+    gMediaDeviceStatus.openAudio(true);
     mediaChanged();
-    if (!audioDevicShow) {
-        addSelect(sAudioInput);
-    }
 }
 
 /// 关闭麦克风
 function closeAudio() {
-    gMediaStatus.openAudio(false);
+    gMediaDeviceStatus.openAudio(false);
     mediaChanged();
 }

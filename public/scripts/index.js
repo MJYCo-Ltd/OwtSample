@@ -33,7 +33,6 @@ let cameraPublicationArray = [];
 // Change to your sample server's URL if it's not deployed on the same machine
 // as this page.
 const serverUrlBase = undefined;
-let localStream;
 let myId;
 let myRoom;
 
@@ -58,8 +57,6 @@ function removeUi(id) {
 }
 
 const runSocketIOSample = function () {
-    checkMedia();
-
     /// 创建会议
     conference = new Owt.Conference.ConferenceClient();
 }
