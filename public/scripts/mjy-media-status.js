@@ -40,11 +40,17 @@ export class MediaDeviceStatus {
     /// 放入音频设备
     pushAudioDevice(sAudioDeviceID){
         this.audioDeviceList.push(sAudioDeviceID);
+        if(-1 === this.audioDeviceIndex){
+            this.audioDeviceIndex = 0;
+        }
     }
 
     /// 放入视频设备
     pushVideoDevice(sVideoDeviceID){
         this.videoDeviceList.push(sVideoDeviceID);
+        if(-1 === this.videoDeviceIndex){
+            this.videoDeviceIndex = 0;
+        }
     }
 
     /// 更改音频设备
@@ -97,16 +103,16 @@ export class MediaDeviceStatus {
     /// 关闭声音
     closeAudioUI() {
         audioObj.attr('src', "./images/audioclose.svg");
-        audioObj.unbind('click', closeAudio);
+        audioObj.unbind('click');
         audioObj.bind('click', openAudio);
     }
 
     /// 关闭视频
     closeVideoUI() {
         videoObj.attr('src', "./images/videoclose.svg");
-        videoObj.unbind('click', closeVideo);
+        videoObj.unbind('click');
         videoObj.bind('click', openVideo);
-        selfVideoObj.unbind('dblclick',this.fullScreen);
+        selfVideoObj.unbind('dblclick');
     }
 
     fullScreen(){
@@ -133,7 +139,7 @@ export class MediaDeviceStatus {
 
             if (this.audioOpen) {
                 audioObj.attr('src', "./images/audio.svg");
-                audioObj.unbind('click', openAudio);
+                audioObj.unbind('click');
                 audioObj.bind('click', closeAudio);
             }else{
                 this.closeAudioUI();
@@ -146,7 +152,7 @@ export class MediaDeviceStatus {
 
             if (this.videoOpen) {
                 videoObj.attr('src', "./images/video.svg");
-                videoObj.unbind('click', openVideo);
+                videoObj.unbind('click');
                 videoObj.bind('click', closeVideo);
                 selfVideoObj.bind('dblclick',this.fullScreen);
             }else{
@@ -161,12 +167,17 @@ export class MediaDeviceStatus {
         this.videoStatusChanged = false;
     }
 
-    /// 获取当前的状态
-    currentStatus() {
+    currentOptions(){
         let obj = {
             video: (this.videoStatusChanged ? !this.videoOpen : this.videoOpen),
             audio: (this.audioStatusChanged ? !this.audioOpen : this.audioOpen)
         }
+        return(obj);
+    }
+
+    /// 获取当前的状态
+    currentStatus() {
+        let obj = this.currentOptions();
 
         /// 如果开启了音频
         if(obj.audio){

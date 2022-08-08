@@ -41,12 +41,22 @@ let videoObj = $(`#video`);
 let selfVideoObj = $(`#selfVideo`);
 let localScreenObj = $('.localscreen video').get(0);
 let localObj = $('.local video').get(0);
+let videoSelectObj = $(`#videoinput`);
+let audioSelectObj = $(`#audioinput`);
 let bCheckedMedia = false;
 
 /// 绑定默认的点击事件
 audioObj.bind('click', openAudio);
 videoObj.bind('click', openVideo);
 screenObj.bind('click', openScreen);
+
+videoSelectObj.change(selectChanged);
+audioSelectObj.change(selectChanged);
+
+function selectChanged(){
+    gMediaDeviceStatus.changeVideo(videoSelectObj.val());
+    gMediaDeviceStatus.changeAudio(audioSelectObj.val());
+}
 
 function removeChidren(id) {
     $(`#${id}`).children().remove();
@@ -119,7 +129,7 @@ function checkMedia() {
 
 function closeScreenUI() {
     screenObj.attr('src', "./images/screenclose.svg");
-    screenObj.unbind('click', closeScreen);
+    screenObj.unbind('click');
     screenObj.bind('click', openScreen);
 }
 
@@ -136,7 +146,7 @@ function closeScreen() {
 
 function openScreenUI() {
     screenObj.attr('src', "./images/screen.svg");
-    screenObj.unbind('click', openScreen);
+    screenObj.unbind('click');
     screenObj.bind('click', closeScreen);
 }
 
@@ -191,9 +201,9 @@ function onGetMediaSuccess(mediaStream) {
     localObj.srcObject = mediaStream;
 
     conference.publish(new Owt.Base.LocalStream(mediaStream, new Owt.Base.StreamSourceInfo('mic', 'camera')),
-     gMediaDeviceStatus.currentStatus()).then(publication => {
+     gMediaDeviceStatus.currentOptions()).then(publication => {
         cameraPublicationArray.push(publication);
-        mixStream(myRoom, publication.id, 'common', serverUrlBase)
+        mixStream(myRoom, publication.id, 'common', serverUrlBase);
         publication.addEventListener('error', (err) => {
             console.log('Publication error: ' + err.error.message);
         });
