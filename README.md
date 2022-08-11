@@ -14,4 +14,6 @@ Conference sample
 
 `public\scripts\quic.js` was added to create QUIC connections between client and server. After navigating to https://hostname:3004/quic.html?publish=false, the page automatically creates a `SendStream` for publishing. It also listens to `stream-added` message and creates new `ReceiveStream` for subscribing. It doesn't subscribe streams published before joining. Please try to modify `quic.js` if you want to try other QUIC features.
 
+## 声明
+
 本工程基于OWT https://github.com/open-webrtc-toolkit/owt-server/releases/tag/v5.0.1 的示例程序修改
